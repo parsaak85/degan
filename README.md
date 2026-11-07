@@ -4,11 +4,13 @@ A simpler way to reserve and manage meals at the University of Guilan.
 
 **[Download the Android APK](https://github.com/parsaak85/degan/releases/latest/download/Degan.apk)** · [Latest release](https://github.com/parsaak85/degan/releases/latest)
 
-<p align="center">
-  <img src="docs/screenshot-reservations.png" alt="Actual Degan reservations screen" width="420">
-</p>
+## Screenshots
 
-Actual app screenshot, cropped to exclude account details.
+| Reservations and QR | Food hunting |
+| --- | --- |
+| <img src="docs/screenshot-reservations.png" alt="Actual reservations screen" width="360"> | <img src="docs/screenshot-hunting.png" alt="Actual food-hunting screen" width="360"> |
+
+Real app screenshots, cropped to exclude account details.
 
 ## Features
 
