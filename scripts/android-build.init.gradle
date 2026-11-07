@@ -1,0 +1,12 @@
+// Keep Android library modules on the SDK build tools installed for this app.
+allprojects { project ->
+    // Shorten generated C++ object paths in this isolated Windows build folder.
+    project.plugins.withId('com.android.application') {
+        project.android.defaultConfig.externalNativeBuild.cmake.arguments '-DCMAKE_OBJECT_PATH_MAX=240'
+    }
+    project.plugins.withId('com.android.library') {
+        project.android {
+            buildToolsVersion '36.0.0'
+        }
+    }
+}

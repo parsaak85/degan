@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "دگان",
+    "slug": "degan",
+    "version": "1.6.12",
+    "orientation": "portrait",
+    "icon": "./assets/launcher-v4.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.degan.app"
+    },
+    "android": {
+      "package": "com.degan.app",
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM"
+      ],
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "backgroundColor": "#3D574E",
+        "foregroundImage": "./assets/launcher-foreground-v4.png",
+        "monochromeImage": "./assets/launcher-monochrome-v4.png"
+      },
+      "versionCode": 28,
+      "icon": "./assets/launcher-v4.png"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "./plugins/withNotificationArtwork",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#3D574E"
+        }
+      ],
+      "./plugins/withLauncherIcon",
+      "./plugins/withLegacyPortalNetwork",
+      "./plugins/withReleaseSigning"
+    ]
+  }
+}
