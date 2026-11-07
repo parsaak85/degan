@@ -1,26 +1,30 @@
-# دگان | Degan
+# Degan | دگان
 
-رزرو و مدیریت غذای دانشگاه گیلان، ساده‌تر و سریع‌تر.
+A simpler way to reserve and manage meals at the University of Guilan.
 
-**[⬇ دانلود نسخه اندروید](https://github.com/parsaak85/degan/releases/latest/download/Degan.apk)** · [همه نسخه‌ها](https://github.com/parsaak85/degan/releases)
+**[Download the Android APK](https://github.com/parsaak85/degan/releases/latest/download/Degan.apk)** · [Latest release](https://github.com/parsaak85/degan/releases/latest)
 
-![پوستر دگان](docs/poster-fa.png)
+<p align="center">
+  <img src="docs/screenshot-reservations.png" alt="Actual Degan reservations screen" width="420">
+</p>
 
-## امکانات
+Actual app screenshot, cropped to exclude account details.
 
-- **رزرو و مدیریت غذا:** خرید، لغو رزرو، گذاشتن برای فروش و برداشتن از فروش.
-- **شکار غذا:** غذاهای دلخواهت را انتخاب کن؛ اولین گزینه‌ای که موجود شود خریداری می‌شود.
-- **شکار در پس‌زمینه:** نمایش روند شکار و اعلان پیدا شدن غذا.
-- **کد QR تحویل:** دسترسی به کد تحویل هر غذای رزروشده.
-- **برنامه هفتگی:** جابه‌جایی بین این هفته و هفته بعد، با تاریخ شمسی و نمایش سبز غذاهای رزروشده.
-- **کیف پول:** نمایش و تازه‌سازی موجودی، هشدار کمبود اعتبار و ادامه پرداخت در مرورگر گوشی.
-- **یادآوری رزرو:** اعلان پنجشنبه‌ها ساعت ۹ صبح.
-- **چند حساب و چند سلف:** ذخیره و انتخاب حساب‌های مختلف و انتخاب سلف.
+## Features
 
-## نصب
+- Reserve and cancel meals, list reserved meals for sale, and withdraw listings.
+- Hunt for selected meals in the background, with progress and success notifications.
+- View pickup QR codes for reserved meals.
+- Browse this week and next week, with Jalali dates and reserved meals highlighted in green.
+- Check wallet balance, receive low-balance alerts, and continue payment in the phone's browser.
+- Receive a weekly reservation reminder on Thursdays at 9 AM.
+- Save and switch between multiple accounts and dining halls.
+- Persian interface designed for mobile use.
 
-[فایل APK](https://github.com/parsaak85/degan/releases/latest/download/Degan.apk) را دانلود و روی گوشی نصب کن. مناسب اندروید ۷ به بالا، نسخه ۶۴بیتی ARM64.
+## Install
 
-برای دریافت یادآوری و اعلان شکار، مجوز اعلان‌ها را فعال کن.
+Download and install the [latest APK](https://github.com/parsaak85/degan/releases/latest/download/Degan.apk). Requires **Android 7 or later, ARM64**.
 
-دگان برنامه‌ای غیررسمی است و وابستگی سازمانی به دانشگاه گیلان یا سامانه سماد ندارد.
+Allow notifications to receive reservation reminders and food-hunting updates.
+
+Degan is an unofficial app and is not affiliated with the University of Guilan or Samad.
