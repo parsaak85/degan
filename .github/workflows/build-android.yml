@@ -1,0 +1,194 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Publish Option'
+        required: true
+        type: choice
+        default: 'artifact_only'
+        options:
+          - 'artifact_only'
+          - 'preview'
+          - 'release'
+      custom_tag:
+        description: 'Custom Tag (optional, e.g. v1.6.13; defaults to package.json version)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test
+
+  build-android:
+    name: Build Android APK
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK & Accept Licenses
+        run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/tools/bin:$PATH"
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prebuild Native Android Project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Configure Keystore Signing (Optional)
+        run: |
+          if [ -n "${{ secrets.DEGAN_KEYSTORE_BASE64 }}" ]; then
+            echo "Configuring release signing credentials..."
+            mkdir -p "$HOME/.release-signing"
+            echo "${{ secrets.DEGAN_KEYSTORE_BASE64 }}" | base64 -d > "$HOME/.release-signing/release.keystore"
+            echo "DEGAN_KEYSTORE_PATH=$HOME/.release-signing/release.keystore" >> "$GITHUB_ENV"
+            echo "DEGAN_KEYSTORE_PASSWORD=${{ secrets.DEGAN_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+            echo "DEGAN_KEY_ALIAS=${{ secrets.DEGAN_KEY_ALIAS }}" >> "$GITHUB_ENV"
+            echo "DEGAN_KEY_PASSWORD=${{ secrets.DEGAN_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+          else
+            echo "No DEGAN_KEYSTORE_BASE64 secret found. Falling back to default signing."
+          fi
+
+      - name: Build Release APKs (Split per ABI)
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon \
+            -PreactNativeArchitectures=armeabi-v7a,arm64-v8a,x86_64 \
+            --init-script ../scripts/android-build.init.gradle
+
+      - name: Prepare APK Outputs
+        run: |
+          mkdir -p output
+          cd android/app/build/outputs/apk/release
+          echo "Generated APK files in Gradle release folder:"
+          ls -la *.apk
+
+          for apk in *.apk; do
+            [ -e "$apk" ] || continue
+            # Convert Gradle names (e.g. app-arm64-v8a-release.apk -> Degan-arm64-v8a.apk)
+            TARGET_NAME=$(echo "$apk" | sed -e 's/^app-/Degan-/' -e 's/-release\.apk$/.apk/')
+            echo "Mapping $apk -> output/$TARGET_NAME"
+            cp "$apk" "$GITHUB_WORKSPACE/output/$TARGET_NAME"
+          done
+
+          cd "$GITHUB_WORKSPACE/output"
+          # Ensure Degan.apk exists (prefer universal or arm64-v8a) for the default release download URL
+          if [ -f "Degan-universal.apk" ]; then
+            cp "Degan-universal.apk" "Degan.apk"
+          elif [ -f "Degan-arm64-v8a.apk" ]; then
+            cp "Degan-arm64-v8a.apk" "Degan.apk"
+          fi
+
+          echo "Final APKs ready for packaging/release:"
+          ls -lh
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Degan-APKs
+          path: output/*.apk
+          if-no-files-found: error
+
+      - name: Determine Release Metadata
+        id: release_meta
+        if: |
+          startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'workflow_dispatch' && inputs.release_type != 'artifact_only')
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TYPE="${{ inputs.release_type }}"
+            TAG="${{ inputs.custom_tag }}"
+            if [ "$TYPE" = "preview" ]; then
+              IS_PRERELEASE="true"
+              if [ -z "$TAG" ]; then
+                TAG="v${VERSION}-preview.${{ github.run_number }}"
+              fi
+              TITLE="Degan $TAG (Preview)"
+            else
+              IS_PRERELEASE="false"
+              if [ -z "$TAG" ]; then
+                TAG="v${VERSION}"
+              fi
+              TITLE="Degan $TAG"
+            fi
+          else
+            # Tag push trigger
+            TAG="${{ github.ref_name }}"
+            TITLE="Degan $TAG"
+            if [[ "$TAG" == *"preview"* || "$TAG" == *"beta"* || "$TAG" == *"rc"* ]]; then
+              IS_PRERELEASE="true"
+            else
+              IS_PRERELEASE="false"
+            fi
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        if: |
+          startsWith(github.ref, 'refs/tags/v') ||
+          (github.event_name == 'workflow_dispatch' && inputs.release_type != 'artifact_only')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output/*.apk
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          name: ${{ steps.release_meta.outputs.title }}
+          prerelease: ${{ steps.release_meta.outputs.is_prerelease == 'true' }}
+          generate_release_notes: true
+          make_latest: ${{ steps.release_meta.outputs.is_prerelease != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

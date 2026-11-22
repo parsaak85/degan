@@ -38,7 +38,8 @@
       ],
       "./plugins/withLauncherIcon",
       "./plugins/withLegacyPortalNetwork",
-      "./plugins/withReleaseSigning"
+      "./plugins/withReleaseSigning",
+      "./plugins/withAbiSplits"
     ]
   }
 }
